@@ -12,7 +12,14 @@
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a>
+        </p>
+        <p>
+          <form method="POST" action="/urls/<%= shortURL%>/">
+            <input type = "text" name="newURL">
+          <button type="submit">edit</button>
+          </form>
+        </p>
       </div>
     <div class="card-footer text-muted"></div>
   </div>
@@ -22,3 +29,4 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>
+
