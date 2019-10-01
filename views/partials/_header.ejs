@@ -11,7 +11,8 @@
         </div>
       </div>
       <% if (username) { %>
-        Logged In As: <%=username%><form method="POST" action="/logout" style="float: right">
+       <p>Logged In As: <%=username%></p> 
+       <form method="POST" action="/logout" style="float: right">
           <button type="submit">logout</button>
         </form>
       <% } else { %>
@@ -19,7 +20,7 @@
           <input type = "text" name="username" placeholder="username" style="width:150px; margin-left:15px" >
           <button type="submit">sign in</button>
         </form>
-      } %> >%
+      <% } %> 
     </nav>
   </header>
   

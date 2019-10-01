@@ -33,6 +33,12 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// logout
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
+  res.redirect("/urls");
+});
+
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
