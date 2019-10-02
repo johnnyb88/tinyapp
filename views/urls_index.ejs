@@ -17,29 +17,26 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
-          <th scope="col">Edit</th>
           <th scope="col">Delete</th>
+          <th scope="col">Edit</th>
         </tr>
       </thead>
       <tbody>
-        <% for (let url in urls) { %>
-
+        <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
             <td><%= urls[url] %></td>
-            <td><form method="GET" action="/urls/<%= url %>/">
-              <button type="submit" value="Update">Edit</button>
-              </form></td>
             <td><form method="POST" action="/urls/<%= url %>/delete">
               <button type="submit">Delete</button>
               </form></td>
+            <td><form method="GET" action="/urls/<%= url %>/">
+              <button type="submit" value="Update">Edit</button>
+              </form></td>
           </tr>
+          
         <% } %>
       </tbody>
     </table>
-    <a
-    <a href="/urls/new">Create new URL</a>
-    </a>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
