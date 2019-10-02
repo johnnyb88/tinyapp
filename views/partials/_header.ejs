@@ -12,12 +12,13 @@
       </div>
       <% if (user) { %>
         <form method="POST" action="/logout" style="float: right">
-           <button type="submit">logout</button>
+          <span><%= user.email %></span> <button type="submit" value="Logout">logout</button>
          </form>
        <% } else { %>
-        <form method="GET" action="/register" style="float: right">
-          <button type="submit">logout</button>
+        <form><a href="/register">Register</a> <a href="/login">Login</a>
+          <button type="submit">login</button>
         </form>
       <% } %>
     </nav>
   </header>
+<!-- header, index, new -->
