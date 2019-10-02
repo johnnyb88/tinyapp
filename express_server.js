@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json({}));
 app.use(cookieParser());
 
 const urlDatabase = {
@@ -39,24 +40,40 @@ const generateRandomString = function() {
 
 //---return register endpoint template
 app.get('/register', (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["randomID"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["user_id"] };
   res.render('email_register', templateVars);
 });
 
 //---
 app.post('/register', (req, res) => {
   res.cookie('randomID', req.body.email);
-  const randomID = generateRandomString();
-  users[randomID] = {
-    id: randomID,
-    email: req.body.email,
-    password: req.body.password,
-  };
-  res.cookies('user_id', randomID);
-  console.log(req.body.email);
-  res.redirect('/urls');
-});
 
+  if (!req.body.password || !req.body.email) {
+    res.status(400).send("Enter an email and password");
+    return;
+  }
+  let arr = [];
+  for (let id in users) {
+    arr.push(users[id].email);
+  }
+
+  if  (arr.includes(req.body.email)) {
+    res.status(400).send("That email already exists");
+    return;
+
+  } else {
+
+    const randomID = generateRandomString();
+    res.cookie("user_id", randomID);
+    users[randomID] = {
+      id: randomID,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.cookie("user_id", randomID);
+    res.redirect("/urls");
+  }
+});
 
 //----login saves cookie
 app.post("/login", (req, res) => {
@@ -67,7 +84,7 @@ app.post("/login", (req, res) => {
 
 //----index of stored urls
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["user_id"] };
   res.render("urls_index", templateVars);
 });
 
@@ -82,7 +99,7 @@ app.get("/u/:shortURL", (req, res) => {
 //----let user enter new url
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["user_id"] };
   res.render("urls_index", templateVars);
 });
 
@@ -98,7 +115,7 @@ app.post("/logout", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let shortURL = req.params.id;
   res.send("urls_show", {shortURL: shortURL, urlDatabase: urlDatabase});
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["user_id"] };
   res.render("urls_index", templateVars);
 });
 
@@ -124,7 +141,7 @@ app.post("/urls/:id", (req, res) => {
   let shortURL = req.params.id;
   let longURL = req.body.newURL;
   urlDatabase[shortURL] = longURL;
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["user_id"] };
   res.render("urls_index", templateVars);
   res.redirect(`/urls/${shortURL}`);
 });
