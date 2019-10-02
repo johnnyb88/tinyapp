@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const cookieSession = require('cookie-session');
-
+const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json({}));
@@ -76,11 +76,13 @@ const checkEmail = function(email) {
   return false;
 };
 
+
+//----email and password correct
 const loginUser = function(email, password) {
   let accepted = false;
   let userId;
   for (let key in users) {
-    if ((users[key].email === email) && (users[key].password)) {
+    if ((users[key].email === email) && (bcrypt.compareSync(users[key].password))) {
       accepted = true;
       userId = key;
       break;
@@ -88,6 +90,28 @@ const loginUser = function(email, password) {
   }
   return userId;
 };
+
+//----identifies if user can edit by id
+const checkUserID = function(userID, shortURL) {
+  for (let id in urlDatabase) {
+    if ((urlDatabase[id].userID === userID) && (urlDatabase[id].shortURL === shortURL))
+      return true;
+  }
+  return false;
+};
+
+//----shows user their specific index of urls
+const urlsForUserID = function(id) {
+  let list = {};
+  for (let item in urlDatabase) {
+    if (id === urlDatabase[item].userid) {
+      list[item] = urlDatabase[item].url;
+    }
+  }
+  return list;
+};
+
+
 
 //----renders login page
 app.get("/login", (req, res) => {
@@ -118,12 +142,13 @@ app.get("/urls", (req, res) => {
   let user = users[userId];
   if (userId) {
     let templateVars = {
+      userId: req.session.user_id,
       urls: urlDatabase,
       user
     };
     res.render("urls_index", templateVars);
   } else {
-    res.status(400).send("Please login or register to view you urls.");
+    res.redirect('/login');
   }
 });
 
@@ -133,25 +158,35 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   let userId = req.session.user_id;
   let user = users[userId];
-  let templateVars = {
-    urls: urlDatabase,
-    user
-  };
-  res.render("urls_new", templateVars);
+  if (userId) {
+    let templateVars = {
+      urls: urlDatabase,
+      user
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.render("login");
+  }
 });
 
 
 
 //----form for updating url
-app.get("/urls/:id/", (req, res) => {
+app.get("/urls/:id", (req, res) => {
+  let shortURL = req.params.id;
   let userId = req.session.user_id;
   let user = users[userId];
-  let templateVars = {
-    shortURL: req.params.id,
-    urlObj: urlDatabase[req.params.id],
-    user
-  };
-  res.render("urls_show", templateVars);
+  if (checkUserID(userId, shortURL)) {
+    let templateVars = {
+      urls: urlDatabase,
+      shortURL: req.params.id,
+      urlObj: urlDatabase[req.params.id],
+      user
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(400).send("You can only update your own urls");
+  }
 });
 
 
@@ -181,12 +216,12 @@ app.get("/", (req, res) => {
   }
 });
 
-// //----update longURL
-// app.get("/urls/:id", (req, res) => {
-//   let shortURL = req.params.id;
-//   let templateVars = { shortURL: shortURL, urls: urlDatabase, username: req.cookies[req.session.user_id] };
-//   res.render("urls_show", templateVars);
-// });
+//----update longURL
+app.get("/urls/:id", (req, res) => {
+  let shortURL = req.params.id;
+  let templateVars = { shortURL: shortURL, urls: urlDatabase, username: req.cookies[req.session.user_id] };
+  res.render("urls_show", templateVars);
+});
 
 
 
