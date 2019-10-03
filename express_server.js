@@ -70,7 +70,7 @@ const loginUser = function(email, password) {
       break;
     }
   }
-  return shortURL;
+  return userId;
 };
 
 //index of stored urls
@@ -94,7 +94,8 @@ app.get("/login", (req, res) => {
 
 //let user enter new url
 app.get("/urls/new", (req, res) => {
-  let templateVars = { urls: urlDatabase, user: req.cookies["user_id"] };
+  let user = getUserById(req.cookies["user_id"]);
+  let templateVars = { urls: urlDatabase, user };
   res.render("urls_new", templateVars);
 });
 
@@ -114,8 +115,9 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
+  let user = getUserById(req.cookies["user_id"]);
   let shortURL = req.params.shortURL;
-  let templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL], user: req.cookies["user_id"]};
+  let templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL], user};
   res.render("urls_show", templateVars);
 });
 
