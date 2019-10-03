@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 const morgan = require("morgan");
+const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -87,7 +88,7 @@ const loginUser = function(email, password) {
   let accepted = false;
   let userId;
   for (let key in users) {
-    if ((users[key].email === email) && (users[key].password === password)) {
+    if ((users[key].email === email) && bcrypt.compareSync(password, users[key].hashedPassword)) {
       accepted = true;
       userId = key;
       break;
@@ -102,7 +103,6 @@ app.get("/urls", (req, res) => {
   if (user) {
     let urlDatabase = urlsForUser(user.id);
     let templateVars = { urls: urlDatabase, user };
-    console.log('new urls', urlDatabase);
     res.render("urls_index", templateVars);
   } else {
     res.redirect('/login');
@@ -208,6 +208,8 @@ app.post("/urls/:id", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+
+
 //---checks user email and password for login
 app.post("/login", (req, res) => {
   if (!req.body.email || !req.body.password) {
@@ -246,12 +248,15 @@ app.post("/register", (req, res) => {
     users[randomID] = {
       id: randomID,
       email: req.body.email,
-      password: req.body.password,
+      hashedPassword: bcrypt.hashSync(req.body.password, 10),
     };
     res.cookie("user_id", randomID);
   }
   res.redirect("/urls");
 });
+
+
+  
 
 
 // logout
