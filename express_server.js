@@ -6,20 +6,19 @@ const cookieSession = require('cookie-session');
 const morgan = require("morgan");
 const bcrypt = require('bcrypt');
 const { getUserByEmail } = require('./helpers');
-
-
-
-
-
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(morgan('combined'));
+
+
+//----- CookieSession -----//
 app.use(cookieSession({
   name: 'session',
   secret: 'thisissupersecret'
 }));
-app.use(morgan('combined'));
 
 
+//----- URL Database -----//
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", shortURL: "b2xVn2", userID: "astb34" },
   "9sm5xK": { longURL: "http://www.google.com", shortURL: "9sm5xK", userID: "yoyo" },
@@ -27,6 +26,7 @@ const urlDatabase = {
 };
 
 
+//----- User Database -----//
 const users = {
   "userRandomID": {
     id: "yoyo",
@@ -42,10 +42,10 @@ const users = {
 
 
 
-//-----FUINCTIONS-------//
+//-----FUINCTIONS-----//
 
 
-//----generates a random six digit alphnumerical string represent short URL
+//----- generates a random six digit alphnumerical string represent short URL -----//
 const generateRandomString = function() {
   let shortURL = '';
   let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -57,7 +57,7 @@ const generateRandomString = function() {
 
 
 
-//----- gets a user by their id
+//----- gets a user by their id -----//
 const getUserById = function(id) {
   if (users[id])
     return users[id];
@@ -65,7 +65,7 @@ const getUserById = function(id) {
 
 
 
-//----Returns users urls
+//----- Returns users urls -----//
 const urlsForUser = function(id) {
   let list = {};
   for (let key in urlDatabase) {
@@ -78,7 +78,7 @@ const urlsForUser = function(id) {
 
 
 
-//===== Email and password correct and correspond =====
+//----- Email and password correct and correspond -----//
 const loginUser = function(email, password) {
   let accepted = false;
   let userId;
@@ -94,10 +94,10 @@ const loginUser = function(email, password) {
 
 
 
-//-----ALL MY GETS--------//
+//-----ALL MY GETS-----//
 
 
-//----index of stored urls
+//-----index of stored urls -----//
 app.get("/urls", (req, res) => {
   let user = getUserById(req.session.user_id);
   if (user) {
@@ -110,21 +110,21 @@ app.get("/urls", (req, res) => {
 });
 
 
-//----get user login information
+
+//----- renders login page -----//
 app.get("/login", (req, res) => {
   let user = getUserById(req.session.user_id);
-  if (!user) {
-    let templateVars = { urls: urlDatabase, user: req.session.user_id };
-    res.render('login', templateVars);
-  } else {
-    res.end("you must login to see urls");
+  let templateVars = { urls: urlDatabase, user: req.session.user_id };
+  if (user) {
     res.redirect('/urls');
+  } else {
+    res.render('login', templateVars);
   }
 });
 
 
 
-//----let user enter new url
+//----- let user enter new url -----//
 app.get("/urls/new", (req, res) => {
   let user = getUserById(req.session.user_id);
   let templateVars = { urls: urlDatabase, user };
@@ -136,14 +136,21 @@ app.get("/urls/new", (req, res) => {
 });
 
 
-//----email registration
+
+//----- email registration -----//
 app.get("/register", (req, res) => {
+  let user = getUserById(req.session.user_id);
   let templateVars = { urls: urlDatabase, user: req.session.user_id };
-  res.render("user_registration", templateVars);
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    res.render("user_registration", templateVars);
+  }
 });
 
 
 
+//----- ShortURL Page -----//
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
     res.status(404).send('url not found');
@@ -152,7 +159,9 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-//----provides form for updating url
+
+
+//----- provides form for updating url -----//
 app.get("/urls/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
     res.status(404).send('url not found');
@@ -167,9 +176,30 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//------MY POSTS--------//
 
-//----update longURL
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+
+
+//----- Redirect to the login -----//
+app.get("/", (req, res) => {
+  let userId = req.session.user_id;
+  if (userId) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
+});
+
+  
+
+
+//-------MY POSTS--------//
+
+//----- update longURL -----//
 app.post("/urls/:id/update", (req, res) => {
   if (!req.session.user_id) {
     res.redirect("/urls");
@@ -187,6 +217,7 @@ app.post("/urls/:id/update", (req, res) => {
 
 
 
+//----- generates new short url -----//
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {
@@ -199,7 +230,8 @@ app.post("/urls", (req, res) => {
 });
 
 
-//----gets short url
+
+//----- post updated url -----//
 app.post("/urls/:id", (req, res) => {
   let shortURL = req.params.id;
   let longURL = req.body.newURL;
@@ -211,7 +243,7 @@ app.post("/urls/:id", (req, res) => {
 
 
 
-//---checks user email and password for login
+//-----checks user email and password for login -----//
 app.post("/login", (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Enter both an email and a password");
@@ -233,11 +265,11 @@ app.post("/login", (req, res) => {
 });
 
 
-//---- adds new user to database
+
+//----- adds new user to database -----//
 app.post("/register", (req, res) => {
   if (!req.body.password || !req.body.email) {
-    res.status(400).send("Enter an email and password");
-    return;
+    res.status(404).send("Please enter a email address and password");
   }
   
   if (getUserByEmail(req.body.email, users)) {
@@ -258,7 +290,7 @@ app.post("/register", (req, res) => {
 
 
   
-
+//----- deletes url -----//
 app.post("/urls/:id/delete", (req, res) => {
   if (!req.session.user_id) {
     res.redirect("/urls");
@@ -275,13 +307,16 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 
-// logout
+//----- logout -----//
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
   
 });
 
+
+
+//----- listen port -----//
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
