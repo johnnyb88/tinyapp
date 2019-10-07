@@ -8,6 +8,14 @@ const getUserByEmail = function(email, database) {
   return user;
 };
 
+//----- generates a random six digit alphnumerical string represent short URL -----//
+const generateRandomString = function() {
+  let shortURL = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 6; i++) {
+    shortURL += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return shortURL;
+};
 
-
-module.exports = { getUserByEmail };
+module.exports = { getUserByEmail, generateRandomString };

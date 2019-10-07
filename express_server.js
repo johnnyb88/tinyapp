@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const morgan = require("morgan");
 const bcrypt = require('bcrypt');
-const { getUserByEmail } = require('./helpers');
+const { getUserByEmail, generateRandomString } = require('./helpers');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('combined'));
@@ -43,17 +43,6 @@ const users = {
 
 
 //-----FUINCTIONS-----//
-
-
-//----- generates a random six digit alphnumerical string represent short URL -----//
-const generateRandomString = function() {
-  let shortURL = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 6; i++) {
-    shortURL += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return shortURL;
-};
 
 
 
@@ -168,12 +157,16 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   let user = getUserById(req.session.user_id);
   let shortURL = req.params.shortURL;
-  let templateVars = {
-    shortURL: shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-    user
-  };
-  res.render("urls_show", templateVars);
+  if (!user) {
+    res.status(401).send('You cannot access this url');
+  } else {
+    let templateVars = {
+      shortURL: shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      user
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 
